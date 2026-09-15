@@ -117,3 +117,35 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trg_evitar_ciclo
 BEFORE INSERT OR UPDATE ON categorias
 FOR EACH ROW EXECUTE FUNCTION evitar_ciclo_categorias();
+-- =============================================
+-- MÓDULO 1: UBICACIONES Y REPORTE DE OCUPACIÓN
+-- =============================================
+
+CREATE TABLE recintos (
+    id_recinto SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    ubicacion VARCHAR(200)
+);
+
+CREATE TABLE salas (
+    id_sala SERIAL PRIMARY KEY,
+    id_recinto INT REFERENCES recintos(id_recinto) ON DELETE CASCADE,
+    nombre VARCHAR(100) NOT NULL,
+    capacidad INT NOT NULL CHECK (capacidad > 0)
+);
+
+-- Relación de eventos con salas
+ALTER TABLE eventos 
+ADD COLUMN id_sala INT REFERENCES salas(id_sala) ON DELETE SET NULL;
+
+-- Vista para el reporte de ocupación de ubicaciones
+CREATE OR REPLACE VIEW vista_reporte_ubicaciones AS
+SELECT 
+    r.nombre AS recinto,
+    s.nombre AS sala,
+    s.capacidad,
+    COUNT(e.id_evento) AS total_eventos
+FROM salas s
+JOIN recintos r ON s.id_recinto = r.id_recinto
+LEFT JOIN eventos e ON s.id_sala = e.id_sala
+GROUP BY r.nombre, s.nombre, s.capacidad;

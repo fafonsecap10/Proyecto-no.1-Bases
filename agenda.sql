@@ -702,3 +702,21 @@ class AppAgenda(ctk.CTk):
 if __name__ == "__main__":
     app = AppAgenda()
     app.mainloop()
+# =============================================
+# MÓDULO 1: FUNCIONES DE UBICACIONES
+# =============================================
+
+def cargar_reporte_ubicaciones(tree, conn):
+    """Carga los datos de ocupación de salas en un Treeview."""
+    for item in tree.get_children():
+        tree.delete(item)
+        
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT recinto, sala, capacidad, total_eventos FROM vista_reporte_ubicaciones;")
+        registros = cursor.fetchall()
+        for fila in registros:
+            tree.insert("", "end", values=fila)
+        cursor.close()
+    except Exception as e:
+        print(f"Error al cargar reporte de ubicaciones: {e}")
