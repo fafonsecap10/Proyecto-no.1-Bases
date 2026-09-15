@@ -741,3 +741,22 @@ def registrar_disponibilidad(conn, id_usuario, id_tipo, fecha, h_inicio, h_fin):
         print(f"Error al registrar disponibilidad: {e}")
         conn.rollback()
         return False
+
+# =============================================
+# MÓDULO 3: FUNCIONES DE TAREAS Y REPORTE
+# =============================================
+
+def cargar_carga_trabajo(tree, conn):
+    """Carga en la interfaz la vista analítica de carga de trabajo por usuario."""
+    for item in tree.get_children():
+        tree.delete(item)
+        
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT usuario, total_tareas, tareas_completadas, tareas_pendientes FROM vista_carga_trabajo;")
+        registros = cursor.fetchall()
+        for fila in registros:
+            tree.insert("", "end", values=fila)
+        cursor.close()
+    except Exception as e:
+        print(f"Error al consultar carga de trabajo: {e}")

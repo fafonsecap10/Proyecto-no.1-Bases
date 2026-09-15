@@ -186,3 +186,34 @@ SELECT
 FROM disponibilidades d
 JOIN usuarios u ON d.id_usuario = u.id_usuario
 JOIN tipos_disponibilidad td ON d.id_tipo = td.id_tipo;
+
+-- =============================================
+-- MÓDULO 3: TAREAS DE EVENTOS Y VISTA ANALÍTICA
+-- =============================================
+
+CREATE TABLE prioridades (
+    id_prioridad SERIAL PRIMARY KEY,
+    nivel VARCHAR(20) NOT NULL UNIQUE
+);
+
+INSERT INTO prioridades (nivel) VALUES ('Baja'), ('Media'), ('Alta'), ('Crítica');
+
+CREATE TABLE tareas (
+    id_tarea SERIAL PRIMARY KEY,
+    id_evento INT REFERENCES eventos(id_evento) ON DELETE CASCADE,
+    id_usuario_asignado INT REFERENCES usuarios(id_usuario) ON DELETE SET NULL,
+    id_prioridad INT REFERENCES prioridades(id_prioridad),
+    titulo VARCHAR(150) NOT NULL,
+    completada BOOLEAN DEFAULT FALSE
+);
+
+-- Vista analítica de carga de trabajo por usuario
+CREATE OR REPLACE VIEW vista_carga_trabajo AS
+SELECT 
+    u.nombre AS usuario,
+    COUNT(t.id_tarea) AS total_tareas,
+    SUM(CASE WHEN t.completada THEN 1 ELSE 0 END) AS tareas_completadas,
+    SUM(CASE WHEN NOT t.completada THEN 1 ELSE 0 END) AS tareas_pendientes
+FROM usuarios u
+LEFT JOIN tareas t ON u.id_usuario = t.id_usuario_asignado
+GROUP BY u.nombre;
