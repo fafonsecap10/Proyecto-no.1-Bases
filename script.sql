@@ -117,6 +117,7 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trg_evitar_ciclo
 BEFORE INSERT OR UPDATE ON categorias
 FOR EACH ROW EXECUTE FUNCTION evitar_ciclo_categorias();
+
 -- =============================================
 -- MÓDULO 1: UBICACIONES Y REPORTE DE OCUPACIÓN
 -- =============================================
@@ -149,3 +150,39 @@ FROM salas s
 JOIN recintos r ON s.id_recinto = r.id_recinto
 LEFT JOIN eventos e ON s.id_sala = e.id_sala
 GROUP BY r.nombre, s.nombre, s.capacidad;
+
+-- =============================================
+-- MÓDULO 2: DISPONIBILIDAD DE USUARIOS
+-- =============================================
+
+CREATE TABLE tipos_disponibilidad (
+    id_tipo SERIAL PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL UNIQUE
+);
+
+INSERT INTO tipos_disponibilidad (nombre) VALUES 
+('Disponible'), 
+('No Disponible'), 
+('Preferente');
+
+CREATE TABLE disponibilidades (
+    id_disponibilidad SERIAL PRIMARY KEY,
+    id_usuario INT REFERENCES usuarios(id_usuario) ON DELETE CASCADE,
+    id_tipo INT REFERENCES tipos_disponibilidad(id_tipo),
+    fecha DATE NOT NULL,
+    hora_inicio TIME NOT NULL,
+    hora_fin TIME NOT NULL,
+    CHECK (hora_fin > hora_inicio)
+);
+
+-- Vista para consultar la agenda de disponibilidades por usuario
+CREATE OR REPLACE VIEW vista_disponibilidad_usuarios AS
+SELECT 
+    u.nombre AS usuario,
+    td.nombre AS estado,
+    d.fecha,
+    d.hora_inicio,
+    d.hora_fin
+FROM disponibilidades d
+JOIN usuarios u ON d.id_usuario = u.id_usuario
+JOIN tipos_disponibilidad td ON d.id_tipo = td.id_tipo;

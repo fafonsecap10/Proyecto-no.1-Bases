@@ -720,3 +720,24 @@ def cargar_reporte_ubicaciones(tree, conn):
         cursor.close()
     except Exception as e:
         print(f"Error al cargar reporte de ubicaciones: {e}")
+
+# =============================================
+# MÓDULO 2: FUNCIONES DE DISPONIBILIDAD
+# =============================================
+
+def registrar_disponibilidad(conn, id_usuario, id_tipo, fecha, h_inicio, h_fin):
+    """Inserta un nuevo bloque de disponibilidad para un usuario."""
+    try:
+        cursor = conn.cursor()
+        sql = """
+            INSERT INTO disponibilidades (id_usuario, id_tipo, fecha, hora_inicio, hora_fin)
+            VALUES (%s, %s, %s, %s, %s);
+        """
+        cursor.execute(sql, (id_usuario, id_tipo, fecha, h_inicio, h_fin))
+        conn.commit()
+        cursor.close()
+        return True
+    except Exception as e:
+        print(f"Error al registrar disponibilidad: {e}")
+        conn.rollback()
+        return False
